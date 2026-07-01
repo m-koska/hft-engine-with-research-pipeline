@@ -1,5 +1,5 @@
-#include "OrderBook.hpp"
-#include "../Utils/MemoryPool.hpp"
+#include "Engine/OrderBook.hpp"
+#include "Utils/MemoryPool.hpp"
 
 #include <bit>
 
@@ -113,18 +113,18 @@ namespace Engine {
 	}
 
 	void OrderBook::replaceOrder(const uint64_t old_id, const uint64_t new_id, const uint32_t new_price, const uint32_t new_volume, const Side side) {
-
 		removeOrder(old_id);
-
 		addOrder(new_id, new_price, new_volume, side);
 	}
 
-	 Order* OrderBook::getOrder(const uint64_t order_id) noexcept {
+	Order* OrderBook::getOrder(const uint64_t order_id) noexcept {
+
 		if (order_id > max_order_id-1) {
 			return nullptr;
 		}
 
 		return order_map[order_id];
+
 	}
 
 	inline void OrderBook::unlinkAndRemove(Order* current_order) {
@@ -219,16 +219,15 @@ namespace Engine {
 		order_map[order_id] = nullptr;
 	}
 
-		const uint32_t OrderBook::getBestBidPrice() const {
-			return this->best_bid;
-		}
+	const uint32_t OrderBook::getBestBidPrice() const {
+		return this->best_bid;
+	}
 
-		const uint32_t OrderBook::getBestAskPrice() const {
-			return this->best_ask;
-		}
+	const uint32_t OrderBook::getBestAskPrice() const {
+		return this->best_ask;
+	}
 
-		const PriceLevelBucket& OrderBook::getPriceLevel(const uint32_t price) const {
-			return this->price_level_bucket_pool[price];
-
-		}
+	const PriceLevelBucket& OrderBook::getPriceLevel(const uint32_t price) const {
+		return this->price_level_bucket_pool[price];
+	}
 }

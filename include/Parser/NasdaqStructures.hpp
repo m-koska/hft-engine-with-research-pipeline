@@ -5,9 +5,9 @@
 // https://www.nasdaqtrader.com/content/technicalsupport/specifications/dataproducts/NQTVITCHSpecification.pdf
 namespace Parser::Structure {
 
-	constexpr size_t MAX_ORDERS = 1'000'000;
-	constexpr size_t MAX_ORDER_ID = 2'000'000'000;
-	constexpr size_t MAX_PRICE = 10'000'000;
+	constexpr std::size_t MAX_ORDERS = 1'000'000;
+	constexpr std::size_t MAX_ORDER_ID = 2'000'000'000;
+	constexpr std::size_t MAX_PRICE = 10'000'000;
 
 	struct SystemEvent {
 	char message_type; // 'S'

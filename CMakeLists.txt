@@ -27,51 +27,25 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googlebenchmark)
 
 # ================================
-#              Engine
+#             Core
 # ================================
 
-add_library(engine STATIC
-        Engine/EngineStructures.hpp
-        Engine/OrderBook.hpp
-        Engine/OrderBook.cpp
-        Utils/MemoryPool.hpp
-)
-
-target_include_directories(engine PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/Engine
-        ${CMAKE_CURRENT_SOURCE_DIR}/Utils
-)
-
-# ================================
-#              Parser
-# ================================
-
-add_library(parser STATIC
-        Parser/MessageType.hpp
-        Parser/NasdaqStructures.hpp
-        Parser/TimeParser.cpp
-        Parser/TimeParser.hpp
-)
-
-target_include_directories(parser PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/Parser
-)
-
-# ================================
-#             Replayer
-# ================================
-
-add_library(replayer STATIC
+add_library(core STATIC
+        src/Engine/OrderBook.cpp
         src/Replayer/NasdaqReplayer.cpp
-        src/Replayer/NasdaqReplayer.hpp
-        src/Replayer/Snapshot.hpp
+
+        include/Engine/EngineStructures.hpp
+        include/Engine/OrderBook.hpp
+        include/Parser/MessageType.hpp
+        include/Parser/NasdaqStructures.hpp
+        include/Parser/TimeParser.hpp
+        include/Replayer/NasdaqReplayer.hpp
+        include/Utils/MemoryPool.hpp
 )
 
-target_include_directories(replayer PUBLIC
-        src/Replayer
+target_include_directories(core PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-
-target_link_libraries(replayer PUBLIC engine parser)
 
 # ================================
 #           Executables
@@ -79,11 +53,11 @@ target_link_libraries(replayer PUBLIC engine parser)
 
 # 1. Run replay (an ITCH file needed)
 add_executable(nasdaq_replayer
-        day_replay.cpp
+        apps/day_replay.cpp
 )
 
 target_link_libraries(nasdaq_replayer PRIVATE
-        replayer
+        core
 )
 
 # 2. Run engine benchmark (random data)
@@ -93,6 +67,6 @@ add_executable(engine_benchmark
 )
 
 target_link_libraries(engine_benchmark PRIVATE
-        engine
+        core
         benchmark::benchmark
 )

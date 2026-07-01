@@ -1,9 +1,9 @@
-#include "NasdaqReplayer.hpp"
+#include "Replayer/NasdaqReplayer.hpp"
 
-#include "Snapshot.hpp"
-#include "TimeParser.cpp"
-#include "../Parser/MessageType.hpp"
-#include "../Parser/NasdaqStructures.hpp"
+#include "Replayer/Snapshot.hpp"
+#include "Parser/TimeParser.hpp"
+#include "Parser/MessageType.hpp"
+#include "Parser/NasdaqStructures.hpp"
 
 #include <sys/mman.h>
 #include <sys/stat.h>

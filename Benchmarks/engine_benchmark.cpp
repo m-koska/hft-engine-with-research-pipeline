@@ -2,7 +2,7 @@
 #include <vector>
 #include <random>
 #include <algorithm>
-#include "../Engine/OrderBook.hpp"
+#include "Engine/OrderBook.hpp"
 
 // Easily fitted into CPU L3 cache
 constexpr uint64_t BATCH_SIZE = 100000;

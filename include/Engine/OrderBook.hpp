@@ -1,7 +1,7 @@
 #pragma once
 
 #include "EngineStructures.hpp"
-#include "../Utils/MemoryPool.hpp"
+#include "Utils/MemoryPool.hpp"
 
 namespace Engine {
 

@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-
 namespace Engine {
 
 	enum class Side : uint8_t {
