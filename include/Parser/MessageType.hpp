@@ -9,7 +9,7 @@ namespace Parser {
 		MarketParticipantPosition = 'L',
 		MarketWideCircuitBreaker = 'V',
 		MarketWideCircuitBreakerStatus = 'W',
-		QuotingPriceUpdate = 'K',
+		QuotingPeriodUpdate = 'K',
 		LimitUpLimitDownAuctionCollar = 'J',
 		OperationalHalt = 'h',
 		AddOrderA = 'A',

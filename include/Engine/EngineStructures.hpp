@@ -10,24 +10,23 @@ namespace Engine {
 	struct Order;
 
 	struct PriceLevelBucket {
-		Order* first_order;
-		Order* last_order;
+		Order* first_order{nullptr};
+		Order* last_order{nullptr};
 
-		uint32_t price;
-		uint32_t total_volume;
-		// skoro PriceLevelBucket będzie w płaskiej tablicy, to nie potrzebuję trzymać w nim wskaźników na najbliższe ceny
+		uint32_t price{0};
+		uint32_t total_volume{0};
 	};
 
 	struct Order {
-		PriceLevelBucket* price_level_bucket;
+		PriceLevelBucket* price_level_bucket{nullptr};
 
-		Order* next;
-		Order* prev;
+		Order* next{nullptr};
+		Order* prev{nullptr};
 
-		uint64_t order_id;
+		uint64_t order_id{0};
 
-		uint32_t volume;
-		Side side;
+		uint32_t volume{0};
+		Side side{Side::BUY};
 	};
 
 }
