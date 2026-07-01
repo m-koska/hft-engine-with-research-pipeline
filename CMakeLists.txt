@@ -62,13 +62,13 @@ target_include_directories(parser PUBLIC
 # ================================
 
 add_library(replayer STATIC
-        Replayer/NasdaqReplayer.cpp
-        Replayer/NasdaqReplayer.hpp
-        Replayer/Snapshot.hpp
+        src/Replayer/NasdaqReplayer.cpp
+        src/Replayer/NasdaqReplayer.hpp
+        src/Replayer/Snapshot.hpp
 )
 
 target_include_directories(replayer PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/Replayer
+        src/Replayer
 )
 
 target_link_libraries(replayer PUBLIC engine parser)
