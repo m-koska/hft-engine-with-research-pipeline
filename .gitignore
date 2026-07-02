@@ -54,3 +54,7 @@ desktop.ini
 *.bak
 *.swp
 """
+
+html
+latex
+Doxyfile

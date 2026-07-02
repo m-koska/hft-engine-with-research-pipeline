@@ -26,25 +26,25 @@ namespace Utils {
 
     T* const TOMBSTONE = reinterpret_cast<T*>(-1);
 
-    std::vector<Slot> map;
     const size_t capacity;
+    std::vector<Slot> map;
     const size_t mask;
     const uint32_t shift;
 
     /// @brief Performs Fibonacci hashing.
     /// @param key Key to be hashed
-    [[nodiscard]] inline size_t hash(uint64_t key) const noexcept {
+    [[nodiscard]] inline size_t hash(const uint64_t key) const noexcept {
       return (GOLDEN_RATIO * key) >> shift;
     }
 
   public:
     /// @brief Initialise the map.
     /// @param max_elements Maximum number of the elements stored in the map.
-    explicit HashMap(size_t max_elements)
+    explicit HashMap(const size_t max_elements)
       : capacity(std::bit_ceil(max_elements)),
+        map(capacity, {0, nullptr}),
         mask(capacity - 1),
-        shift(64 - std::countr_zero(capacity)),
-        map(capacity, {0, nullptr}) {}
+        shift(64 - std::countr_zero(capacity)) {}
 
     /// @brief Inserts a new element.
     /// @param key The key of the element.
@@ -52,8 +52,8 @@ namespace Utils {
     void insert(const uint64_t key, const T* value) {
 
       size_t index = hash(key);
-      while (map[index].value != nullptr && map[index].key != TOMBSTONE) {
-        index = (index +1) % capacity; // improved readibility, compilers makes it into (index+1) & mask anyways
+      while (map[index].value != nullptr && map[index].value != TOMBSTONE) {
+        index = (index +1) & mask;
       }
       map[index].key = key;
       map[index].value = value;
@@ -63,7 +63,7 @@ namespace Utils {
     /// @brief Grants access to an element by its key.
     /// @param key The key of the element.
     /// @return Either a pointer to the element or nullptr.
-    [[nodiscard]] T* get(const uint64_t key) {
+    [[nodiscard]] T* get(const uint64_t key) const noexcept {
 
       size_t index = hash(key);
 
@@ -73,7 +73,7 @@ namespace Utils {
           return map[index].value;
         }
 
-        index = (index+1) % capacity;
+        index = (index+1) & mask;
 
       }
 
@@ -83,7 +83,7 @@ namespace Utils {
 
     /// @brief Erases an element from the map.
     /// @param key The key of the element.
-    void erase(uint64_t key) {
+    void erase(uint64_t key) noexcept {
 
       size_t index = hash(key);
 
@@ -91,9 +91,10 @@ namespace Utils {
 
         if (map[index].value != TOMBSTONE && map[index].key == key) [[likely]] {
           map[index].value = TOMBSTONE;
+          return;
         }
 
-        index = (index+1) % capacity;
+        index = (index+1) & mask;
 
       }
 

@@ -6,7 +6,12 @@
 namespace Engine {
 
 	OrderBook::OrderBook(const size_t max_orders, const size_t max_order_id, const size_t max_price)
-		: order_pool(max_orders), max_order_id(max_order_id), max_orders(max_orders), max_price(max_price) {
+		:
+		order_pool(max_orders),
+		max_order_id(max_order_id),
+		max_orders(max_orders),
+		max_price(max_price) {
+
 		price_level_bucket_pool = static_cast<PriceLevelBucket *>(
 			calloc(max_price, sizeof(PriceLevelBucket)));
 

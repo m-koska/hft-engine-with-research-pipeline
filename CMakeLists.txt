@@ -41,6 +41,7 @@ add_library(core STATIC
         include/Parser/TimeParser.hpp
         include/Replayer/NasdaqReplayer.hpp
         include/Utils/MemoryPool.hpp
+        include/Utils/HashMap.hpp
 )
 
 target_include_directories(core PUBLIC
