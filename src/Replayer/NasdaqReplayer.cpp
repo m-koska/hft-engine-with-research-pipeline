@@ -74,7 +74,7 @@ namespace Replayer {
 
 					if (stock_locate) {
 						order_books[stock_locate] = std::make_unique<Engine::OrderBook>(
-							Parser::Structure::MAX_ORDERS, Parser::Structure::MAX_ORDER_ID, Parser::Structure::MAX_PRICE);
+							Parser::Structure::MAX_ORDERS, Parser::Structure::MAX_PRICE);
 
 						stock_states [stock_locate] = std::make_unique<TickerMicrostate>();
 
@@ -290,8 +290,8 @@ namespace Replayer {
 		const uint32_t cur_bid = order_book.getBestBidPrice();
 		const uint32_t cur_ask = order_book.getBestAskPrice();
 
-		const uint32_t cur_bid_vol = (cur_bid == 0) ? 0 : order_book.getPriceLevel(cur_bid).total_volume;
-		const uint32_t cur_ask_vol = (cur_ask == UINT32_MAX) ? 0 : order_book.getPriceLevel(cur_ask).total_volume;
+		const uint32_t cur_bid_vol = (cur_bid == 0) ? 0 : order_book.getPriceLevel(cur_bid, Engine::Side::BUY).total_volume;
+		const uint32_t cur_ask_vol = (cur_ask == UINT32_MAX) ? 0 : order_book.getPriceLevel(cur_ask, Engine::Side::BUY).total_volume;
 
 		int64_t buy_pressure = 0;
 		if (cur_bid > state.prev_bid) buy_pressure = cur_bid_vol;

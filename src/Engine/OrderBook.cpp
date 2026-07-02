@@ -2,42 +2,32 @@
 #include "Utils/MemoryPool.hpp"
 
 #include <bit>
+#include <stdexcept>
 
 namespace Engine {
 
-	OrderBook::OrderBook(const size_t max_orders, const size_t max_order_id, const size_t max_price)
-		:
-		order_pool(max_orders),
-		max_order_id(max_order_id),
-		max_orders(max_orders),
-		max_price(max_price) {
+	OrderBook::OrderBook(const size_t max_orders, const size_t max_price)
+		: order_pool(max_orders),
+			max_orders(max_orders),
+			max_price(max_price),
+			buy_price_levels(max_price),
+			sell_price_levels(max_price),
+			active_price_levels_buy((max_price >> 6) + 1, 0),
+			summary_bitboard_buy((active_price_levels_buy.size() >> 6) + 1, 0),
+			active_price_levels_sell((max_price >> 6) + 1, 0),
+			summary_bitboard_sell((active_price_levels_sell.size() >> 6) + 1, 0),
+			order_map(max_orders) {}
 
-		price_level_bucket_pool = static_cast<PriceLevelBucket *>(
-			calloc(max_price, sizeof(PriceLevelBucket)));
+	void OrderBook::addOrder(const uint64_t order_id, const uint32_t price, const uint32_t volume, const Side side) noexcept {
 
-		active_price_levels = static_cast<uint64_t *>(
-			calloc((max_price / 64) + 1, sizeof(uint64_t)));
-
-		order_map = static_cast<Order **>(calloc(max_order_id, sizeof(Order *)));
-
-		best_bid = 0;
-		best_ask = UINT32_MAX;
-	}
-
-	OrderBook::~OrderBook() {
-		free(price_level_bucket_pool);
-		free(active_price_levels);
-		free(order_map);
-	}
-
-	void OrderBook::addOrder(const uint64_t order_id, const uint32_t price, const uint32_t volume, const Side side) {
-
-		if (order_id >= max_order_id || price >= max_price) {
+		if (price >= max_price) [[unlikely]] {
+			//throw std::runtime_error("CRITICAL: Price exceeding max_price" + std::to_string(price) + " exceeded max_price " + std::to_string(max_price));
 			return;
 		}
 
 		Order* current_order = order_pool.allocate();
 		if (current_order == nullptr) [[unlikely]] {
+			throw std::runtime_error("CRITICAL: Memory Pool exhausted! Increase max_orders.");
 			return;
 		}
 
@@ -45,20 +35,24 @@ namespace Engine {
 		current_order->volume = volume;
 		current_order->side = side;
 
+		PriceLevelBucket* current_price_level = nullptr;
+
 		if (side == Side::BUY) {
-			if (price > best_bid) {
-				best_bid = price;
-			}
+
+			if (price > best_bid) best_bid = price;
+
+			current_price_level = &buy_price_levels[price];
+
 		}
-		if (side == Side::SELL) {
-			if (price < best_ask) {
-				best_ask = price;
-			}
+		else {
+
+			if (price < best_ask) best_ask = price;
+
+			current_price_level = &sell_price_levels[price];
+
 		}
 
-		PriceLevelBucket* current_price_level = &price_level_bucket_pool[price];
 		current_order->price_level_bucket = current_price_level;
-
 		current_price_level->price = price;
 		current_price_level->total_volume += volume;
 
@@ -67,6 +61,7 @@ namespace Engine {
 
 		current_order->prev = current_last;
 		current_order->next = nullptr;
+
 		if (current_last != nullptr) {
 			current_last->next = current_order;
 		}
@@ -75,26 +70,34 @@ namespace Engine {
 		if (current_first == nullptr) {
 
 			current_price_level->first_order = current_order;
-			const uint32_t price_block_index = price >> 6; // price/64 (2^6)
-			const uint32_t price_bit_index = price & 0x3F; // price%64
 
-			active_price_levels[price_block_index] |= (1ULL << price_bit_index);
+			const uint32_t price_block_index = price >> 6;
+			const uint32_t price_bit_index = price & 0x3F;
+			const uint32_t summary_block_index = price_block_index >> 6;
+			const uint32_t summary_bit_index = price_block_index & 0x3F;
+
+			if (side == Side::BUY) {
+				active_price_levels_buy[price_block_index] |= (1ULL << price_bit_index);
+				summary_bitboard_buy[summary_block_index] |= (1ULL << summary_bit_index);
+			} else {
+				active_price_levels_sell[price_block_index] |= (1ULL << price_bit_index);
+				summary_bitboard_sell[summary_block_index] |= (1ULL << summary_bit_index);
+			}
 
 		}
 
-		//trzeba to zmodyfikować potem, bo id na Nasdaq to są ogromne liczby
-		order_map[order_id] = current_order;
+		order_map.insert(order_id, current_order);
 
 	}
 
-	void OrderBook::removeOrder(const uint64_t order_id) {
+	void OrderBook::removeOrder(const uint64_t order_id) noexcept {
 
 		const auto current_order = getOrder(order_id);
 		unlinkAndRemove(current_order);
 
 	}
 
-	void OrderBook::reduceOrderVolume(const uint64_t order_id, uint32_t cancelled_volume) {
+	void OrderBook::reduceOrderVolume(const uint64_t order_id, uint32_t cancelled_volume) noexcept {
 
 		const auto current_order = getOrder(order_id);
 		if (current_order == nullptr) {
@@ -117,30 +120,20 @@ namespace Engine {
 
 	}
 
-	void OrderBook::replaceOrder(const uint64_t old_id, const uint64_t new_id, const uint32_t new_price, const uint32_t new_volume, const Side side) {
+	void OrderBook::replaceOrder(const uint64_t old_id, const uint64_t new_id, const uint32_t new_price, const uint32_t new_volume, const Side side) noexcept {
 		removeOrder(old_id);
 		addOrder(new_id, new_price, new_volume, side);
 	}
 
-	Order* OrderBook::getOrder(const uint64_t order_id) noexcept {
-
-		if (order_id > max_order_id-1) {
-			return nullptr;
-		}
-
-		return order_map[order_id];
-
-	}
-
-	inline void OrderBook::unlinkAndRemove(Order* current_order) {
+	inline void OrderBook::unlinkAndRemove(Order* current_order) noexcept {
 
 		if (current_order == nullptr) {
 			return;
 		}
 
 		const uint64_t order_id = current_order->order_id;
-
 		const auto current_price_level = current_order->price_level_bucket;
+
 		current_price_level->total_volume -= current_order->volume;
 
 		const auto current_prev = current_order->prev;
@@ -163,76 +156,56 @@ namespace Engine {
 			const uint32_t price_bit_index = price & 0x3F;
 			const uint32_t price_block_index = price >> 6;
 
-			active_price_levels[price_block_index] &= ~(1ULL << price_bit_index);
-
 			if (current_order->side == Side::BUY) {
+			    active_price_levels_buy[price_block_index] &= ~(1ULL << price_bit_index);
 
-				if (current_price_level->price == best_bid) {
+			    if (active_price_levels_buy[price_block_index] == 0) {
+			        const uint32_t summary_block_index = price_block_index >> 6;
+			        const uint32_t summary_bit_index = price_block_index & 0x3F;
+			        summary_bitboard_buy[summary_block_index] &= ~(1ULL << summary_bit_index);
+			    }
 
-					best_bid = 0;
+			    if (price == best_bid) {
+			        best_bid = 0;
+			        auto summary_idx = static_cast<int32_t>(price_block_index >> 6);
+			        while (summary_idx >= 0) {
+			            if (summary_bitboard_buy[summary_idx] != 0) {
+			                const uint32_t block_offset = 63 - std::countl_zero(summary_bitboard_buy[summary_idx]);
+			                const uint32_t block_idx = (summary_idx << 6) + block_offset;
+			                best_bid = (block_idx << 6) + (63 - std::countl_zero(active_price_levels_buy[block_idx]));
+			                break;
+			            }
+			            summary_idx--;
+			        }
+			    }
+			} else {
+			    active_price_levels_sell[price_block_index] &= ~(1ULL << price_bit_index);
 
-					auto block_index = static_cast<int32_t>(price_block_index);
+			    if (active_price_levels_sell[price_block_index] == 0) {
+			        const uint32_t summary_block_index = price_block_index >> 6;
+			        const uint32_t summary_bit_index = price_block_index & 0x3F;
+			        summary_bitboard_sell[summary_block_index] &= ~(1ULL << summary_bit_index);
+			    }
 
-					while (block_index >= 0) {
-
-						const uint64_t& current_block = active_price_levels[block_index];
-
-						if (current_block == 0) {
-							block_index--;
-						} else {
-							best_bid =
-								(block_index << 6)
-								+ (0x3F - std::countl_zero(current_block));
-							break;
-						}
-
-					}
-
-				}
-
-			}
-
-			if (current_order->side == Side::SELL) {
-
-				if (current_price_level->price == best_ask) {
-
-					best_ask = UINT32_MAX;
-
-					auto block_index = static_cast<int32_t>(price_block_index);
-
-					while (block_index <= static_cast<int32_t>(max_price >> 6)) {
-
-						const uint64_t& current_block = active_price_levels[block_index];
-
-						if (current_block == 0) {
-							block_index++;
-						} else {
-							best_ask = (block_index << 6)
-								+ std::countr_zero(current_block);
-							break;
-						}
-
-					}
-
-				}
-
+			    if (price == best_ask) {
+			        best_ask = UINT32_MAX;
+			        auto summary_idx = static_cast<size_t>(price_block_index >> 6);
+			        while (summary_idx < summary_bitboard_sell.size()) {
+			            if (summary_bitboard_sell[summary_idx] != 0) {
+			                const uint32_t block_offset = std::countr_zero(summary_bitboard_sell[summary_idx]);
+			                const uint32_t block_idx = (summary_idx << 6) + block_offset;
+			                best_ask = (block_idx << 6) + std::countr_zero(active_price_levels_sell[block_idx]);
+			                break;
+			            }
+			            summary_idx++;
+			        }
+			    }
 			}
 
 		}
 
 		order_pool.deallocate(current_order);
-		order_map[order_id] = nullptr;
+		order_map.erase(order_id);
 	}
 
-	const uint32_t OrderBook::getBestBidPrice() const {
-		return this->best_bid;
-	}
-
-	const uint32_t OrderBook::getBestAskPrice() const {
-		return this->best_ask;
-	}
-
-	const PriceLevelBucket& OrderBook::getPriceLevel(const uint32_t price) const {
-		return this->price_level_bucket_pool[price];
-	}
 }

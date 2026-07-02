@@ -24,7 +24,7 @@ static void BM_Engine_AddOrder(benchmark::State& state) {
 
     for (auto _ : state) {
         state.PauseTiming();
-        Engine::OrderBook ob(1000000, 100000, 100000);
+        Engine::OrderBook ob(1000000, 100000);
         state.ResumeTiming();
 
         // adding orders with random prices
@@ -59,7 +59,7 @@ static void BM_Engine_RemoveOrder(benchmark::State& state) {
     for (auto _ : state) {
 
         state.PauseTiming();
-        Engine::OrderBook ob(1000000, 100000, 100000);
+        Engine::OrderBook ob(1000000, 100000);
 
         // Filling the OrderBook
         for (uint64_t i = 0; i < BATCH_SIZE; ++i) {
@@ -99,7 +99,7 @@ static void BM_Engine_ReduceVolume(benchmark::State& state) {
     for (auto _ : state) {
 
         state.PauseTiming();
-        Engine::OrderBook ob(1000000, 100000, 100000);
+        Engine::OrderBook ob(1000000, 100000);
 
         for (uint64_t i = 0; i < BATCH_SIZE; ++i) {
             ob.addOrder(i, 50000, 1000000, Engine::Side::BUY);
@@ -150,7 +150,7 @@ static void BM_Engine_ReplaceOrder(benchmark::State& state) {
     for (auto _ : state) {
 
         state.PauseTiming();
-        Engine::OrderBook ob(1000000, 100000, 100000);
+        Engine::OrderBook ob(1000000, 100000);
         for (uint64_t i = 0; i < BATCH_SIZE; ++i) {
             ob.addOrder(i, 50000, 100, Engine::Side::BUY);
         }

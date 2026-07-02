@@ -49,7 +49,7 @@ namespace Utils {
     /// @brief Inserts a new element.
     /// @param key The key of the element.
     /// @param value Pointer to the element
-    void insert(const uint64_t key, const T* value) {
+    void insert(const uint64_t key, T* value) {
 
       size_t index = hash(key);
       while (map[index].value != nullptr && map[index].value != TOMBSTONE) {

@@ -15,9 +15,8 @@ namespace Parser::Structure {
 	/// Network Byte Order (Big-Endian). They MUST be byte-swapped (e.g., via std::byteswap)
 	/// before being evaluated on Little-Endian host architectures (x86_64).
 
-	constexpr std::size_t MAX_ORDERS = 1'000'000;
-	constexpr std::size_t MAX_ORDER_ID = 2'000'000'000;
-	constexpr std::size_t MAX_PRICE = 10'000'000;
+	constexpr std::size_t MAX_ORDERS = 16'000'000;
+	constexpr std::size_t MAX_PRICE = 200'000'000;
 
 	struct SystemEvent {
 	char message_type; // 'S'

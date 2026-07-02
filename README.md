@@ -10,7 +10,7 @@ To prove the engine's capability of extracting actionable signals from raw marke
 The C++ engine integrates a continuous event-driven accumulator calculating the **Order Flow Imbalance (OFI)**—measuring the net discrete pressure of additions, executions, and cancellations at the Best Bid and Offer (BBO). Following the theoretical framework of *Cont, R., Kukanov, A., & Stoikov, S. (2014) "The price impact of order book events" (Journal of Financial Econometrics)*, the model evaluates short-term price discovery.
 It is known, that in the tick-short time the price is to some degree deterministic.
 
-![OFI Impact on Price Delta](ofi_price_delta.png)
+![OFI Impact on Price Delta](research/ofi_price_delta.png)
 
 ### Results (OLS Regression Output)
 * **Statistical Significance:** The t-statistic for the OFI variable yielded $t = 41.2$ for MSFT ($p\text{-value} = 1.17 \times 10^{-260}$) and $t = 46.6$ for AAPL ($p\text{-value} = 3.41 \times 10^{-319}$), unequivocally rejecting the random-walk null hypothesis at microstructure horizons
