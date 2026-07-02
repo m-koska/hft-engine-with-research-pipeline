@@ -204,3 +204,4 @@ ggplot(df_clean, aes(x = ofi, y = mid_price_delta)) +
 ```
 
 ![](ofi_price_delta.png)
+37
