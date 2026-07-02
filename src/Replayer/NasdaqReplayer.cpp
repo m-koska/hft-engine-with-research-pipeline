@@ -53,6 +53,8 @@ namespace Replayer {
 			uint16_t stock_locate = 0;
 			uint64_t parsed_timestamp = 0;
 
+
+
 			switch (static_cast<Parser::MessageType>(message_type_bin)) {
 
 				case Parser::MessageType::StockDirectory: {
@@ -239,15 +241,20 @@ namespace Replayer {
 			if (book_modified) {
 
 				const auto order_book = order_books[stock_locate].get();
-
 				const auto stock_state = stock_states[stock_locate].get();
+
 				stock_state->current_ofi_accumulator += calculateTickOFI(*order_book, *stock_state);
 
-				stock_state->event_count++;
+				const double current_mid = (order_book->getBestAskPrice() + order_book->getBestBidPrice()) / 2.0;
 
-				if (stock_state->event_count >= 1000) {
+				// Pierwsza inicjalizacja dla danego waloru
+				if (stock_state->prev_snapshot_timestamp == 0) {
+					stock_state->prev_snapshot_timestamp = parsed_timestamp;
+					stock_state->prev_snapshot_mid_price = current_mid;
+				}
 
-					const double current_mid = (order_book->getBestAskPrice() + order_book->getBestBidPrice()) / 2.0;
+				// Sprawdzenie, czy minęło 10 sekund fizycznych (10 miliardów nanosekund)
+				if (parsed_timestamp - stock_state->prev_snapshot_timestamp >= 10'000'000'000ULL) {
 					Snapshot snap{};
 					snap.parsed_timestamp = parsed_timestamp;
 					snap.mid_price = current_mid;
@@ -255,14 +262,12 @@ namespace Replayer {
 					snap.cumulated_ofi = stock_state->current_ofi_accumulator;
 					snap.stock_locate = stock_locate;
 
-
 					stock_state->current_ofi_accumulator = 0;
-					stock_state->event_count = 0;
+					stock_state->prev_snapshot_timestamp = parsed_timestamp;
 					stock_state->prev_snapshot_mid_price = current_mid;
 					stock_state->stock_locate = stock_locate;
 
 					writeSnapshot(snap);
-
 				}
 
 			}
@@ -291,7 +296,7 @@ namespace Replayer {
 		const uint32_t cur_ask = order_book.getBestAskPrice();
 
 		const uint32_t cur_bid_vol = (cur_bid == 0) ? 0 : order_book.getPriceLevel(cur_bid, Engine::Side::BUY).total_volume;
-		const uint32_t cur_ask_vol = (cur_ask == UINT32_MAX) ? 0 : order_book.getPriceLevel(cur_ask, Engine::Side::BUY).total_volume;
+		const uint32_t cur_ask_vol = (cur_ask == UINT32_MAX) ? 0 : order_book.getPriceLevel(cur_ask, Engine::Side::SELL).total_volume;
 
 		int64_t buy_pressure = 0;
 		if (cur_bid > state.prev_bid) buy_pressure = cur_bid_vol;

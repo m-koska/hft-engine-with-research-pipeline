@@ -13,16 +13,17 @@ namespace Replayer {
 	};
 
 	struct TickerMicrostate {
-		int64_t current_ofi_accumulator = 0;
-		double prev_snapshot_mid_price = 0.0;
-		uint32_t prev_bid = 0;
-		uint32_t prev_ask = UINT32_MAX;
-		uint32_t prev_bid_vol = 0;
-		uint32_t prev_ask_vol = 0;
+		int64_t current_ofi_accumulator{0};
+		uint64_t prev_snapshot_timestamp{0};
+		double prev_snapshot_mid_price{0.0};
+		uint32_t prev_bid{0};
+		uint32_t prev_ask{UINT32_MAX};
+		uint32_t prev_bid_vol{0};
+		uint32_t prev_ask_vol{0};
 
-		uint32_t event_count = 0;
+		uint32_t event_count{0};
 
-		uint16_t stock_locate;
+		uint16_t stock_locate{0};
 	};
 
 }
