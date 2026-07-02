@@ -1,6 +1,8 @@
 #pragma once
 
 namespace Parser {
+	/// @brief Represents standard NASDAQ ITCH 5.0 message type codes.
+	/// @details Strongly typed to prevent implicit conversions during parsing.
 	enum MessageType : char {
 		SystemEvent = 'S',
 		StockDirectory = 'R',

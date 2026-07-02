@@ -2,8 +2,18 @@
 #pragma pack(push, 1)
 
 #include <cstdint>
-// https://www.nasdaqtrader.com/content/technicalsupport/specifications/dataproducts/NQTVITCHSpecification.pdf
+
 namespace Parser::Structure {
+
+	/// @file NasdaqStructures.hpp
+	/// @brief NASDAQ ITCH 5.0 protocol definitions.
+	///
+	/// @note Full documentation of each code:
+	/// https://www.nasdaqtrader.com/content/technicalsupport/specifications/dataproducts/NQTVITCHSpecification.pdf
+	///
+	/// @warning ENDIANNESS: All multi-byte numeric fields in these structures represent
+	/// Network Byte Order (Big-Endian). They MUST be byte-swapped (e.g., via std::byteswap)
+	/// before being evaluated on Little-Endian host architectures (x86_64).
 
 	constexpr std::size_t MAX_ORDERS = 1'000'000;
 	constexpr std::size_t MAX_ORDER_ID = 2'000'000'000;
